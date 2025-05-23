@@ -1,14 +1,23 @@
 """ Creates a list of words from a .txt file. """
+
+
 def load_words_from_file(filepath):
     with open(filepath, 'r') as file:
         words = [line.strip().lower() for line in file]
     return words
 
 """ Removes words with detected grey letters and words without correct green letters. """
-def filter_invalid_words(valid_words, guess, feedback, prior_guesses):
-    incorrect_letters = set()
-    valid_letters = set()
+def filter_invalid_words(valid_words, guess, feedback):
+    guess = guess.lower()
+
+    grey_positions = {}
+    yellow_positions = {}
     green_positions = {}
+
+    current_yellow = {}
+
+    valid_letters = set() # green/yellow
+    invalid_letters = set() # grey
 
     for i, color in enumerate(feedback):
         letter = guess[i]
@@ -16,21 +25,44 @@ def filter_invalid_words(valid_words, guess, feedback, prior_guesses):
             green_positions[i] = letter
             valid_letters.add(letter)
         elif color == 'yellow':
+            yellow_positions[i] = letter
+            if letter in current_yellow:
+                current_yellow[letter] += 1
+            else:
+                current_yellow[letter] = 1
             valid_letters.add(letter)
         elif color == 'gray':
-            incorrect_letters.add(letter)
-    truly_incorrect = incorrect_letters - valid_letters
+            grey_positions[i] = letter
+            invalid_letters.add(letter)
+    truly_incorrect = invalid_letters - valid_letters
 
-    filtered = []
+    filtered_words = []
     for word in valid_words:
-        if any(letter in word for letter in truly_incorrect):
-            continue
+        word = word.lower()
+
+        # Rule 1: match green positioning
         if any(word[i] != letter for i, letter in green_positions.items()):
             continue
-        if word in prior_guesses:
+
+        # Rule 2: exclude sole grey letters
+        if any(til in word for til in truly_incorrect):
             continue
-        filtered.append(word)
-    return filtered
+
+        # Rule 3: exclude secondary grey letters 
+        if any(word[i] == letter for i, letter in grey_positions.items()):
+            continue
+
+        # Rule 4a: yellows cannot be in same position
+        if any(word[i] == letter for i, letter in yellow_positions.items()):
+            continue
+
+        # Rule 4b: words with yellow characters in different positions 
+        if any(word.count(letter) < count for letter, count in current_yellow.items()):
+            continue
+
+        filtered_words.append(word)
+            
+    return filtered_words
 
 """ Adds to green and yellow positions from feedback of a new guess. """
 def store_positions(guess,guess_feedback,green_positions, yellow_positions, yellow_letters):

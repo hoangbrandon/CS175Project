@@ -89,7 +89,7 @@ def play_wordle():
         while True:
             #starts with first guess as 'stare'
             if guesses == 0:
-                guess = 'stare'
+                guess = 'tales'
             prior_guesses.add(guess)
             # else:
                 # guess = input("Enter your guess: ").lower()
@@ -116,7 +116,7 @@ def play_wordle():
         #updates green and yellow letters' positions
         store_positions(guess, feedback, green_positions, yellow_positions,yellow_letters)
         #updates valid words
-        valid_words = filter_invalid_words(valid_words, guess, feedback, prior_guesses)
+        valid_words = filter_invalid_words(valid_words, guess, feedback)
         #makes next guess based off information gathered from previous guess
         guess = make_guess(valid_words,green_positions,yellow_positions,yellow_letters)
 
