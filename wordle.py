@@ -82,6 +82,7 @@ def play_wordle():
     yellow_letters = set()
     # creates a list of all valid words from valid-guesses.txt
     valid_words = load_words_from_file('./Words/valid-guesses.txt')
+    filtered_words = valid_words
 
     while guesses < MAX_GUESSES:
         # print(f"\nGuess {guesses + 1} of {MAX_GUESSES}")
@@ -89,7 +90,7 @@ def play_wordle():
         while True:
             #starts with first guess as 'stare'
             if guesses == 0:
-                guess = 'tales'
+                guess = 'slate'
             prior_guesses.add(guess)
             # else:
                 # guess = input("Enter your guess: ").lower()
@@ -113,12 +114,10 @@ def play_wordle():
         if all(f == 'green' for f in feedback):
             win = True
             break
-        #updates green and yellow letters' positions
-        store_positions(guess, feedback, green_positions, yellow_positions,yellow_letters)
         #updates valid words
-        valid_words = filter_invalid_words(valid_words, guess, feedback)
         #makes next guess based off information gathered from previous guess
-        guess = make_guess(valid_words,green_positions,yellow_positions,yellow_letters)
+        prev = guess
+        guess, filtered_words = make_next_guess(prev,feedback,filtered_words,valid_words)
 
     # game Over
     # print("\n--- Game Over ---")
