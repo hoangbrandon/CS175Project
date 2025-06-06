@@ -130,10 +130,11 @@ def play_wordle():
 
 if __name__ == "__main__":
     wins = 0
-    for i in range(1000):
+    games = 10
+    for i in range(games):
         game = play_wordle()
         if game:
             wins+=1
-    print(f'Won {wins} / 1000')
+    print(f'Won {wins} / {games}')
         
     
