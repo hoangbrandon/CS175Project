@@ -50,14 +50,8 @@ def display_feedback(guess, feedback):
     print("---------------") # Separator line
 
 def test_wordle():
-    # print(f"You have {MAX_GUESSES} guesses to find the {WORD_LENGTH}-letter word.")
 
     while True:
-        # show word
-        # secret_word = input(f"Enter the {WORD_LENGTH}-letter secret word: ").lower()
-        # hide word
-        # secret_word = getpass.getpass(f"Enter the {WORD_LENGTH}-letter secret word: ").lower()
-
         #creates list of words from valid-guesses.txt
         secret_words = load_words_from_file('./Words/shuffled_real_wordles.txt')
         # selects random word from secret_words list
@@ -66,8 +60,6 @@ def test_wordle():
             break
         else:
             print(f"Invalid input. Please enter exactly {WORD_LENGTH} letters.")
-
-    # print("\n--- Game Start ---")
 
     guesses = 0
     win = False
@@ -78,14 +70,11 @@ def test_wordle():
     potential_solutions = set(actual_possible_answers) # Start with actual Wordles as candidates
 
     while guesses < MAX_GUESSES:
-        # print(f"\nGuess {guesses + 1} of {MAX_GUESSES}")
 
         while True:
-            #starts with first guess as 'stare'
+            #starts with first guess as 'slate'
             if guesses == 0:
                 guess = 'slate'
-            # else:
-                # guess = input("Enter your guess: ").lower()
             if len(guess) == WORD_LENGTH and guess.isalpha():
                 break
             else:
@@ -94,11 +83,6 @@ def test_wordle():
         feedback = get_feedback(guess, secret_word)
         history.append((guess, feedback))
 
-        # display history
-        # print("\n--- History ---")
-        # for g, f in history:
-        #      display_feedback(g, f)
-
         # increment guesses
         guesses += 1
 
@@ -106,19 +90,17 @@ def test_wordle():
         if all(f == 'green' for f in feedback):
             win = True
             break
-        #updates valid words
         #makes next guess based off information gathered from previous guess
         prev = guess
         guess, potential_solutions = make_next_guess(prev, feedback, potential_solutions, all_allowed_guesses)
 
     # game Over
-    # print("\n--- Game Over ---")
     if win:
         print(f"Congratulations! You guessed the word '{secret_word.upper()}' in {guesses} guesses!")
-        return 1
+        return 1, guesses
     else:
         print(f"Sorry, you ran out of guesses. The word was '{secret_word.upper()}'.")
-        return 0
+        return 0, guesses
     
 
 def play_wordle(r):
@@ -140,15 +122,12 @@ def play_wordle(r):
         while True:
             # show word
             secret_word = input(f"Enter the {WORD_LENGTH}-letter secret word: ").lower()
-            # hide word
-            # secret_word = getpass.getpass(f"Enter the {WORD_LENGTH}-letter secret word: ").lower()
-
             if len(secret_word) == WORD_LENGTH and secret_word.isalpha():
                 break
             else:
                 print(f"Invalid input. Please enter exactly {WORD_LENGTH} letters.")
 
-    # print("\n--- Game Start ---")
+    print("\n--- Game Start ---")
 
     guesses = 0
     win = False
@@ -159,10 +138,9 @@ def play_wordle(r):
     potential_solutions = set(actual_possible_answers) # Start with actual Wordles as candidates
 
     while guesses < MAX_GUESSES:
-        # print(f"\nGuess {guesses + 1} of {MAX_GUESSES}")
+        print(f"\nGuess {guesses + 1} of {MAX_GUESSES}")
 
         while True:
-            # guess = input("Enter your guess: ").lower()
             if guesses > 0:
                 use_bot = input("Do you want the bot to suggest your next guess? (y/n): ").strip().lower() == 'y'
                 if use_bot:
@@ -171,8 +149,10 @@ def play_wordle(r):
                     user_input = input("Press [Enter] to accept or type your own guess: ").strip().lower()
                     if user_input:
                         guess = user_input
+                else:
+                    guess = input("Enter your guess: ").lower()
             else:
-                guess = input("Enter your guess: ").lower()
+                    guess = input("Enter your guess: ").lower()
 
             if len(guess) == WORD_LENGTH and guess.isalpha():
                 break
@@ -212,12 +192,15 @@ def play_wordle(r):
 
 def testing_bot():
     wins = 0
+    number_of_guesses = 0
     games = int(input("How many games to simulate?: "))
     for i in range(games):
-        game = test_wordle()
+        game, guess = test_wordle()
+        number_of_guesses += guess
         if game:
             wins+=1
     print(f'Won {wins} / {games}')
+    print(f'Average Number of Guesses: {number_of_guesses/games}')
 
 if __name__ == "__main__":
     choice = input(
