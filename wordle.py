@@ -49,17 +49,17 @@ def display_feedback(guess, feedback):
     print(feedback_string)
     print("---------------") # Separator line
 
-def play_wordle():
+def test_wordle():
     # print(f"You have {MAX_GUESSES} guesses to find the {WORD_LENGTH}-letter word.")
 
     while True:
         # show word
-        #secret_word = input(f"Enter the {WORD_LENGTH}-letter secret word: ").lower()
+        # secret_word = input(f"Enter the {WORD_LENGTH}-letter secret word: ").lower()
         # hide word
         # secret_word = getpass.getpass(f"Enter the {WORD_LENGTH}-letter secret word: ").lower()
 
         #creates list of words from valid-guesses.txt
-        secret_words = load_words_from_file('./Words/valid-guesses.txt')
+        secret_words = load_words_from_file('./Words/shuffled_real_wordles.txt')
         # selects random word from secret_words list
         secret_word = secret_words[random.randint(1,len(secret_words) -1)]
         if len(secret_word) == WORD_LENGTH and secret_word.isalpha():
@@ -70,19 +70,12 @@ def play_wordle():
     # print("\n--- Game Start ---")
 
     guesses = 0
-    # keeps track of all guesses to ensure no repeats
-    prior_guesses = set()
     win = False
     history = [] 
-    # dictionary for green letters {index: letter}
-    green_positions = {}
-    # list for yellow letters [(index, letter)]
-    yellow_positions = []
-    # set of yellow letters
-    yellow_letters = set()
-    # creates a list of all valid words from valid-guesses.txt
-    valid_words = load_words_from_file('./Words/valid-guesses.txt')
-    filtered_words = valid_words
+
+    all_allowed_guesses = load_words_from_file('./Words/valid-guesses.txt')
+    actual_possible_answers = load_words_from_file('./Words/shuffled_real_wordles.txt')
+    potential_solutions = set(actual_possible_answers) # Start with actual Wordles as candidates
 
     while guesses < MAX_GUESSES:
         # print(f"\nGuess {guesses + 1} of {MAX_GUESSES}")
@@ -91,7 +84,6 @@ def play_wordle():
             #starts with first guess as 'stare'
             if guesses == 0:
                 guess = 'slate'
-            prior_guesses.add(guess)
             # else:
                 # guess = input("Enter your guess: ").lower()
             if len(guess) == WORD_LENGTH and guess.isalpha():
@@ -117,24 +109,132 @@ def play_wordle():
         #updates valid words
         #makes next guess based off information gathered from previous guess
         prev = guess
-        guess, filtered_words = make_next_guess(prev,feedback,filtered_words,valid_words)
+        guess, potential_solutions = make_next_guess(prev, feedback, potential_solutions, all_allowed_guesses)
 
     # game Over
     # print("\n--- Game Over ---")
     if win:
-        # print(f"Congratulations! You guessed the word '{secret_word.upper()}' in {guesses} guesses!")
+        print(f"Congratulations! You guessed the word '{secret_word.upper()}' in {guesses} guesses!")
         return 1
     else:
-        # print(f"Sorry, you ran out of guesses. The word was '{secret_word.upper()}'.")
+        print(f"Sorry, you ran out of guesses. The word was '{secret_word.upper()}'.")
         return 0
+    
 
-if __name__ == "__main__":
+def play_wordle(r):
+    # print(f"You have {MAX_GUESSES} guesses to find the {WORD_LENGTH}-letter word.")
+        
+
+    if r:
+        while True:
+            #creates list of words from valid-guesses.txt
+            secret_words = load_words_from_file('./Words/shuffled_real_wordles.txt')
+            # selects random word from secret_words list
+            secret_word = secret_words[random.randint(1,len(secret_words) -1)]
+
+            if len(secret_word) == WORD_LENGTH and secret_word.isalpha():
+                break
+            else:
+                print(f"Invalid input. Please enter exactly {WORD_LENGTH} letters.")
+    else:
+        while True:
+            # show word
+            secret_word = input(f"Enter the {WORD_LENGTH}-letter secret word: ").lower()
+            # hide word
+            # secret_word = getpass.getpass(f"Enter the {WORD_LENGTH}-letter secret word: ").lower()
+
+            if len(secret_word) == WORD_LENGTH and secret_word.isalpha():
+                break
+            else:
+                print(f"Invalid input. Please enter exactly {WORD_LENGTH} letters.")
+
+    # print("\n--- Game Start ---")
+
+    guesses = 0
+    win = False
+    history = [] 
+
+    all_allowed_guesses = load_words_from_file('./Words/valid-guesses.txt')
+    actual_possible_answers = load_words_from_file('./Words/shuffled_real_wordles.txt')
+    potential_solutions = set(actual_possible_answers) # Start with actual Wordles as candidates
+
+    while guesses < MAX_GUESSES:
+        # print(f"\nGuess {guesses + 1} of {MAX_GUESSES}")
+
+        while True:
+            # guess = input("Enter your guess: ").lower()
+            if guesses > 0:
+                use_bot = input("Do you want the bot to suggest your next guess? (y/n): ").strip().lower() == 'y'
+                if use_bot:
+                    guess, potential_solutions = make_next_guess(prev, feedback, potential_solutions, all_allowed_guesses)
+                    print(f"[BOT SUGGESTS] Try: {guess.upper()}")
+                    user_input = input("Press [Enter] to accept or type your own guess: ").strip().lower()
+                    if user_input:
+                        guess = user_input
+            else:
+                guess = input("Enter your guess: ").lower()
+
+            if len(guess) == WORD_LENGTH and guess.isalpha():
+                break
+            else:
+                print(f"Invalid guess. Please enter exactly {WORD_LENGTH} letters.")
+
+        feedback = get_feedback(guess, secret_word)
+        history.append((guess, feedback))
+
+        # display history
+        print("\n--- History ---")
+        for g, f in history:
+             display_feedback(g, f)
+
+        # increment guesses
+        guesses += 1
+
+        # check for win
+        if all(f == 'green' for f in feedback):
+            win = True
+            break
+        #updates valid words
+        #makes next guess based off information gathered from previous guess
+        prev = guess
+        # update potential
+        _, potential_solutions = make_next_guess(prev, feedback, potential_solutions, all_allowed_guesses)
+
+    # game Over
+    # print("\n--- Game Over ---")
+    if win:
+        print(f"Congratulations! You guessed the word '{secret_word.upper()}' in {guesses} guesses!")
+        return 1
+    else:
+        print(f"Sorry, you ran out of guesses. The word was '{secret_word.upper()}'.")
+        return 0
+    
+
+def testing_bot():
     wins = 0
-    games = 10
+    games = int(input("How many games to simulate?: "))
     for i in range(games):
-        game = play_wordle()
+        game = test_wordle()
         if game:
             wins+=1
     print(f'Won {wins} / {games}')
+
+if __name__ == "__main__":
+    choice = input(
+        "\n--- Wordle Game Menu ---\n"
+        "T - Test wordle bot x times \n"
+        "P - Play a random Wordle\n"
+        "F - Let a friend play your Wordle (you set the word)\n"
+        "Q - Quit\n\n"
+        "What mode would you like to play?: "
+    ).strip().lower()
+
+    if choice == "t":
+        testing_bot()
+    elif choice == "p":
+        play_wordle(True)
+    elif choice == "f":
+        play_wordle(False)
+
         
     

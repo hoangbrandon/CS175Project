@@ -52,16 +52,19 @@ def get_best_guess(candidates, all_words, max_guesses):
     Find the guess that maximizes expected information gain
     """
     candidates_list = list(candidates)
-    if len(candidates_list) <= 2:
+    if not candidates_list:
+        return None # No candidates to choose from or base entropy on
+    if len(candidates_list) <= 2: # Handles 1 or 2 candidates
         return candidates_list[0]
+
     # Use all words as potential guesses
     guess_pool = all_words
-    
+
     # Limit guesses to check for speed
     if max_guesses and len(guess_pool) > max_guesses:
         # Mix remaining candidates with common starting words fir better efficiency
-        common_starters = ['SLATE', 'TRACE', 'CRATE', 'ADIEU', 'AUDIO', 'ROATE', 'RAISE', 'STARE', 'CRANE', 'SLANT']
-        guess_pool = list(candidates) + [w for w in common_starters if w in all_words]
+        common_starters = ['slate', 'trace', 'crate', 'adieu', 'audio', 'roate', 'raise', 'stare', 'crane', 'slant']
+        guess_pool = list(dict.fromkeys(list(candidates) + [w for w in common_starters if w in all_words]))
         guess_pool = guess_pool[:max_guesses]
     best_guess = None
     best_entropy = -1
@@ -70,6 +73,8 @@ def get_best_guess(candidates, all_words, max_guesses):
         if entropy > best_entropy:
             best_entropy = entropy
             best_guess = guess  
+    if best_guess is None and candidates_list:
+        return candidates_list[0]
     return best_guess
 
 def filter_candidates(guess, feedback, candidates):
@@ -102,4 +107,6 @@ def make_next_guess(previous_guess, feedback, candidates, all_words):
         max_guesses = None
     # Get best guess
     next_guess = get_best_guess(new_candidates, all_words, max_guesses)
+    if next_guess is None and new_candidates:
+        next_guess = list(new_candidates)[0] # Fallback to the first remaining candidate
     return next_guess, new_candidates
